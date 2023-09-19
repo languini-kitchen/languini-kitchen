@@ -46,16 +46,20 @@ def log_stats_and_dist(tensor, prefix, log):
     if logger is None:
         return
 
-    # compute stats on cpu
-    tensor = tensor.detach().cpu().float()
-
+    # compute stats on gpu
+    #tensor = tensor.detach().cpu().float()
+    tensor_mean = tensor.mean().float()
+    tensor_max = tensor.max().float()
+    tensor_min = tensor.min().float()
+    tensor_l2 = torch.norm(tensor).float()
+    
     # write as scalar
     logger.log(
         {
-            f"{prefix}/mean": tensor.mean(),
-            f"{prefix}/max": tensor.max(),
-            f"{prefix}/min": tensor.min(),
-            f"{prefix}/l2": torch.norm(tensor),
+            f"{prefix}/mean": tensor_mean.cpu(),
+            f"{prefix}/max": tensor_max.cpu(),
+            f"{prefix}/min": tensor_min.cpu(),
+            f"{prefix}/l2": tensor_l2.cpu(),
         },
         step=step,
     )
@@ -73,22 +77,19 @@ def log_global_stats_and_dist(tensors, prefix, log):
         return
     
     # compute stats on device
-    stats = []
+    global_numel = 0
+    global_sum = 0
+    global_pow2sum = 0
+    global_max = -torch.inf
+    global_min = torch.inf
     for tensor in tensors:
-        # compute stats on cpu
-        tensor = tensor.detach().cpu().float()
-        numel = tensor.numel()
-        elsum = tensor.sum()
-        pow2sum = tensor.pow(2).sum()
-        elmax = tensor.max()
-        elmin = tensor.min()
-        stats.append((numel, elsum, pow2sum, elmax, elmin))
-    
-    global_numel = sum(stat[0] for stat in stats)
-    global_sum = sum(stat[1] for stat in stats)
-    global_pow2sum = sum(stat[2] for stat in stats)
-    global_max = max(stat[3] for stat in stats)
-    global_min = min(stat[4] for stat in stats)
+        # compute stats on gpu
+        tensor = tensor.detach().float()
+        global_numel += tensor.numel()  # already int not tensor
+        global_sum += tensor.sum().cpu()
+        global_pow2sum +=  tensor.pow(2).sum().cpu()
+        global_max = max(global_max, tensor.max().cpu())
+        global_min = min(global_min, tensor.min().cpu())
     
     global_mean = global_sum / global_numel
     global_l2 = torch.sqrt(global_pow2sum)
@@ -144,13 +145,13 @@ def log_weight_stats(model, prefix, log):
 
 def step_and_log_diff(scaler, opt, model, prefix, log):
     with torch.no_grad():
-        pre_p = {name: p.detach().cpu().clone() for name, p in model.named_parameters() if p.requires_grad}
+        pre_p = {name: p.detach().clone() for name, p in model.named_parameters() if p.requires_grad}
         if scaler:
             scaler.step(opt)
             scaler.update()
         else:
             opt.step()
-        diffs = {name: p.detach().cpu().clone() - pre_p[name] for name, p in model.named_parameters() if p.requires_grad}
+        diffs = {name: p.detach().clone() - pre_p[name] for name, p in model.named_parameters() if p.requires_grad}
         
         for name, diff in diffs.items():
             shape = "x".join(f"{d}" for d in diff.shape)
