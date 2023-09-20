@@ -53,6 +53,34 @@ The baseline main files consist of two arg parsers. The first argument is the pr
 torchrun --standalone languini/projects/gpt/main.py tiny --h_dim 666
 ```
 
+If you have multiple GPUs available you need to specify the number of GPUs and master server. Training across different machines (nodes) is only recommended if your network is fast enough. For example, use the following command to run on GPU with ids 0 and 2. 
+```
+CUDA_VISIBLE_DEVICES=0,2 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2
+    --master_addr=localhost --master_port=12303 languini/projects/gpt/main.py mini \
+    --max_train_steps 50000 \
+    --decay_steps 50000 \
+    --logger_type tb \
+    --train_batch_size 32 \
+    --max_eval_steps 200 \
+    --gradient_accumulation_steps 1 \
+    --eval_every 100 \
+    --log_terminal_every 20 \
+    --log_metrics_every 20 \
+    --log_grads_every 100
+```
+
+| Argument | Description |
+| --- | --- |
+| CUDA_VISIBLE_DEVICES=0,2 | Only exposes gpu device 0 and 2 to pytorch
+| torchrun | PyTorch tool to start distributed scripts (we always use torchrun)
+| nnodes | Number of nodes/machines in total
+| node_rank | Unique rank of this node/machine; rank 0 is the master
+| nproc_per_node | Number of workers per node, each worker will use one gpu
+| master_addr | master server which performs the weight updates
+| master_port | master port
+
+The remaining arguments are specific to the projects ```config.py```.
+
 ## Measure throughput
 Use the following command to measure throughput and flops of any model config.
 ```
