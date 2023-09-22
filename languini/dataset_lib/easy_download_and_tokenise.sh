@@ -6,26 +6,19 @@
 # Tokenising may also take several hours depending on the CPUs of the machine. 
 # 
 # Example:
-# ./languini/dataset_lib/download_and_tokenise.sh
+# ./languini/dataset_lib/easy_download_and_tokenise.sh
 #
 
-#!/bin/bash
-
-# Check if current folder is named "languini-kitchen"
-if [[ $(basename "$PWD") != "languini-kitchen" ]]; then
-    echo "Error: Run this script from the root of 'languini-kitchen'."
+# Check if the script is run relatively to the root of languini-kitchen
+if [ ! -f $PWD/languini/dataset_lib/easy_download_and_tokenise.sh ]; then
+    echo "Error: Run this script from the root of the repository."
     exit 1
 fi
 
-# Check if a symlink called "data" exists in the current directory
-if [[ ! -L "data" ]]; then
-    echo "Error: 'data' symlink does not exist. See README."
-    exit 1
-fi
+mkdir -p data
 
 # Download the dataset
-chmod +x languini/dataset_lib/books3_download.sh
-bash ./languini/dataset_lib/books3_download.sh
+./languini/dataset_lib/books3_download.sh
 
 # Download the list of file names for the languini books splits
 mkdir -p data/books
