@@ -10,6 +10,9 @@ destination="data"
 # 1 Gigabyte is 1,073,741,824 bytes or 1,048,576 Kilobytes
 required_space=$(( (37 + 102) * 1048576 )) # space needed for tar file and extracted content
 
+# Make sure destination exists
+mkdir -p "$destination"
+
 # Check if there is enough disk space
 available_space=$(df "$destination" | awk 'NR==2 {print $4}') # disk free space in KB
 
@@ -21,7 +24,7 @@ fi
 # Download and extract the dataset
 echo "Downloading dataset..."
 #wget https://the-eye.eu/public/AI/pile_preliminary_components/books3.tar.gz -P "$destination"
-wget https://thenose.cc/public/AI/EleutherAI_ThePile_v1/pile_preliminary_components/books3.tar.gz -P "$destination"
+wget --continue https://thenose.cc/public/AI/EleutherAI_ThePile_v1/pile_preliminary_components/books3.tar.gz -P "$destination"
 tar -xvzf "$destination/books3.tar.gz" -C "$destination"
 
 echo "Done."
