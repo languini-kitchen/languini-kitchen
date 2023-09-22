@@ -37,7 +37,6 @@ pip install -e . --upgrade
 ### Download and tokenise the books3 dataset
 
 ```
-chmod +x languini/dataset_lib/easy_download_and_tokenise.sh
 ./languini/dataset_lib/easy_download_and_tokenise.sh
 ```
 
