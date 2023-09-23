@@ -39,4 +39,5 @@ python3 languini/dataset_lib/tokenise_languini_books.py --split_npy_file data/bo
 python3 languini/dataset_lib/tokenise_languini_books.py --split_npy_file data/books/file_list_test_iid.npy --spm_model languini/vocabs/spm_models/books_16384.model
 python3 languini/dataset_lib/tokenise_languini_books.py --split_npy_file data/books/file_list_train.npy --spm_model languini/vocabs/spm_models/books_16384.model
 
-
+# Check integrity of the dataset content
+languini/dataset_lib/books3_check_integrity.sh
