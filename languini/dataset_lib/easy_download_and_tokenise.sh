@@ -22,18 +22,20 @@ mkdir -p data
 
 # Download the list of file names for the languini books splits
 mkdir -p data/books
-wget https://zenodo.org/record/8326484/files/file_list_test_iid.npy -P data/books
-wget https://zenodo.org/record/8326484/files/file_list_test_java.npy -P data/books
-wget https://zenodo.org/record/8326484/files/file_list_test_langlearn.npy -P data/books
-wget https://zenodo.org/record/8326484/files/file_list_test_statistics.npy -P data/books
-wget https://zenodo.org/record/8326484/files/file_list_test_woodworking.npy -P data/books
-wget https://zenodo.org/record/8326484/files/file_list_train.npy -P data/books
+wget https://zenodo.org/record/8375423/files/file_list_test_iid.npy -P data/books
+wget https://zenodo.org/record/8375423/files/file_list_test_java.npy -P data/books
+wget https://zenodo.org/record/8375423/files/file_list_test_langlearn.npy -P data/books
+wget https://zenodo.org/record/8375423/files/file_list_test_statistics.npy -P data/books
+wget https://zenodo.org/record/8375423/files/file_list_test_woodworking.npy -P data/books
+wget https://zenodo.org/record/8375423/files/file_list_test_discworld.npy -P data/books
+wget https://zenodo.org/record/8375423/files/file_list_train.npy -P data/books
 
 # Tokenise the languini books data with the default 16k sentencepiece vocabulary.
 python3 languini/dataset_lib/tokenise_languini_books.py --split_npy_file data/books/file_list_test_langlearn.npy --spm_model languini/vocabs/spm_models/books_16384.model
 python3 languini/dataset_lib/tokenise_languini_books.py --split_npy_file data/books/file_list_test_statistics.npy --spm_model languini/vocabs/spm_models/books_16384.model
 python3 languini/dataset_lib/tokenise_languini_books.py --split_npy_file data/books/file_list_test_woodworking.npy --spm_model languini/vocabs/spm_models/books_16384.model
 python3 languini/dataset_lib/tokenise_languini_books.py --split_npy_file data/books/file_list_test_java.npy --spm_model languini/vocabs/spm_models/books_16384.model
+python3 languini/dataset_lib/tokenise_languini_books.py --split_npy_file data/books/file_list_test_discworld.npy --spm_model languini/vocabs/spm_models/books_16384.model
 python3 languini/dataset_lib/tokenise_languini_books.py --split_npy_file data/books/file_list_test_iid.npy --spm_model languini/vocabs/spm_models/books_16384.model
 python3 languini/dataset_lib/tokenise_languini_books.py --split_npy_file data/books/file_list_train.npy --spm_model languini/vocabs/spm_models/books_16384.model
 
