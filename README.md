@@ -36,9 +36,16 @@ pip install -e . --upgrade
 
 ### Download and tokenise the books3 dataset
 
+This process is slow and can take a while.
 ```
 ./languini/dataset_lib/easy_download_and_tokenise.sh
 ```
+
+If you already downloaded the tokenised the data you can just link to it.
+```
+ln -s path/to/data data
+```
+
 
 ## How to run experiments
 Use the following command to train a small transformer model on languini books. 
@@ -68,6 +75,9 @@ CUDA_VISIBLE_DEVICES=0,2 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2
     --log_grads_every 100
 ```
 
+Running a various experiments on different GPUs and different servers is impractical with config edits. But using arguments can also become cumbersome. To simplify this we recommend the use of two simple scripts. First, you can write in ```run.sh``` your custom command for your next experiment. Second, you can use ```sync.sh``` to easily sync your languini code to a specific server. All that is left to do is to connect to the server and execute e.g. ```./run.sh 0,3,4,5``` to run your commands on 4 gpus.
+
+
 | Argument | Description |
 | --- | --- |
 | CUDA_VISIBLE_DEVICES=0,2 | Only exposes gpu device 0 and 2 to pytorch
@@ -79,6 +89,8 @@ CUDA_VISIBLE_DEVICES=0,2 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2
 | master_port | master port
 
 The remaining arguments are specific to the projects ```config.py```.
+
+
 
 ## Measure throughput
 Use the following command to measure throughput and flops of any model config.
