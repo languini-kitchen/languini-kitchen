@@ -97,8 +97,11 @@ Running a various experiments on different GPUs and different servers is impract
 The remaining arguments are specific to the projects ```config.py```.
 
 
+## How to evaluate models on the languini books benchmark
 
-## Measure throughput
+On the languini books benchmark we compare models based on the normalised perplexity on held-out data (see the paper for more details on normalised perplexity). 
+Because larger models tend to perform better, all models are compared given the same compute ideal compute constraints. Before training, we use the provided throughput script (see below) to measure the tokens per second of a particular model and config on the reference hardware. Given the throughput of a config we can then compute the number of training steps for different hours of compute. The ```languini/dataset_lib/throughput.py``` script will directly output the number of steps for the compute hours used in the paper. For further details please see Section 3 of the Languini Kitchen paper.
+
 Use the following command to measure throughput and flops of any model config.
 ```
 CUDA_VISIBLE_DEVICES=0 python3 languini/common_lib/flops_profile.py gpt small --train_batch_size 1
@@ -113,4 +116,20 @@ Use the following command to automatically find the largest batch size for a par
 python3 languini/common_lib/throughput_sweep.py gpt tiny --gpu 0
 ```
 
-Look up further details in the respective project folders.
+## Step by step instructions for research on languini
+1. Follow the languini-kitchen instructions to install the package and to download and tokenise the training data.
+2. Create a new project folder (we'd recommend to copy one of the existing ones) and give it a distinct name. 
+3. Implement your method only within that project folder. If you want to use code from other projects, copy that code into your own project.
+4. Use the ```throughput.py``` and ```throughput_sweep.py``` scripts to improve your models throughput. It is recommended to max out GPU utilization on the reference hardware.
+5. Use your best config and ```throughput.py``` to calculate the number of steps for different hours of compute.
+6. Train the same model and config on all compute classes that you can afford for the respective number of steps. You can track the experiments using wandb or tensorboard.
+7. Evaluate your final model using your projects ```eval.py``` script on all test splits. 
+
+If you would like to share your work we recommend these additional steps.
+
+8. Write a detailed report of your method and findings. Publish it on arXiv or similar.
+9. Upload your final model checkpoints and logs to zenodo.org.
+10. Add a readme to your project with commands to reproduce your results, download links for your logs and trained models, and a bibtex to your report.
+11. Create a push-request on the official languini-kitchen repository. 
+
+Successfully pushing your project to the official languini-kitchen repository will make it easier for others to see your work and build on it. New projects and results may be also mentioned in any of languini's social media channels.  

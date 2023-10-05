@@ -94,6 +94,16 @@ def main():
             else:
                 print(f"{k}: {v}")
 
+        tokens_per_second = result["tokens per second"]
+        tokens_per_batch = result["tokens per batch"]
+        
+        print(f"\nOn this device, the measured throughput permits the following number of training steps.\n")
+        hours = [3, 6, 12, 24, 48, 98, 192, 384]
+        for h in hours:
+            total_tokens = tokens_per_second * 60 * 60 * h
+            steps = total_tokens // tokens_per_batch
+            print(f"{h:3d} hours: {total_tokens:15,} tokens in {steps:10,} steps")
+
     # Add model config information to the results dict (for logging purposes) and dump to pickle file
     pickle_dict = {}
     pickle_dict['vocab_size'] = config.vocab_size
