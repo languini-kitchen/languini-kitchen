@@ -123,7 +123,7 @@ python3 languini/common_lib/throughput_sweep.py gpt tiny --gpu 0
 4. Use the ```throughput.py``` and ```throughput_sweep.py``` scripts to improve your models throughput. It is recommended to max out GPU utilization on the reference hardware.
 5. Use your best config and ```throughput.py``` to calculate the number of steps for different hours of compute.
 6. Train the same model and config on all compute classes that you can afford for the respective number of steps. You can track the experiments using wandb or tensorboard.
-7. Evaluate your final model using your projects ```eval.py``` script on all test splits. 
+7. Evaluate your final model using your projects ```eval.py``` script on all test splits. You can compare absolute performance at different levels of compute or you can also compare the scaling trend of your model.
 
 If you would like to share your work we recommend these additional steps.
 
