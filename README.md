@@ -17,7 +17,7 @@ Languini is designed to be a research codebase for the development of small lang
 Download books3, tokenise Languini books, and get the Languini codebase ready for experiments.
 
 ### Install Languini
-Note: torch.compile is not yet supported in python3.11. You will have to install an older version of python in that case before continuing.
+Note: torch.compile is not yet supported in python3.11. You will have to install an older version of python in that case before continuing. If you'd like to copy languini into your own private repo for your research the follow [these steps](create_private_repo.md).
 
 ```
 git clone https://github.com/languini-kitchen/languini-kitchen.git
