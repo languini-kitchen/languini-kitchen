@@ -46,6 +46,12 @@ If you already downloaded the tokenised the data you can just link to it.
 ln -s path/to/data data
 ```
 
+Check dataset integrity by hashing filenames and filesizes. 
+```
+python3 languini/dataset_lib/integrity_test.py data/books/books_16384
+```
+The hash for ```books_16384``` is ```0957d626c108d0075c18a5a99fa766533a46b2fba833061fdce445c6066558f7```.
+
 
 ## How to run experiments
 Use the following command to train a small transformer model on languini books. 
