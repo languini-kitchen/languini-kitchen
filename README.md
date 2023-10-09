@@ -3,7 +3,7 @@
 # Languini Kitchen
 
 [![Website](https://img.shields.io/badge/Website-Visit-brightgreen)](https://languini-kitchen.github.io/) 
-[![ArXiv](https://img.shields.io/badge/ArXiv-Paper-blue)](https://arxiv.org/) 
+[![ArXiv](https://img.shields.io/badge/ArXiv-Paper-blue)](https://arxiv.org/abs/2309.11197) 
 [![Discord](https://img.shields.io/badge/Discord-Join-purple)](https://discord.gg/5W3rTRJa) 
 [![Twitter](https://img.shields.io/badge/Twitter-Follow-blue?logo=twitter&style=social)]([#](https://twitter.com/LanguiniKitchen)https://twitter.com/LanguiniKitchen)
 
