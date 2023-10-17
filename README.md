@@ -9,9 +9,12 @@
 
 Enabling Language Modelling Research at Different Scales of Compute.
 
-</div
+<img src="robot.webp" alt="An image of a robot in a lagnuini kitchen." width="350"/>
+</div>
 
-Languini is designed to be a research codebase for the development of small language models. The code is easy to use, simple to understand, and hackable.
+## Introduction
+
+Languini is designed to be a research codebase for the development of small language models. The code is easy to use, simple to understand, and hackable. Follow the instructions in the following Sections to learn how to install the languini pip package, how to run your own experiments, and how to evaluate your research on the languini books benchmark. If you have questions you should be able to find help on our discord channel or you can reach out to the authors of the Languini Kitchen paper. All relevant links can be found at the top of this readme.
 
 ## Preparations
 Download books3, tokenise Languini books, and get the Languini codebase ready for experiments.
