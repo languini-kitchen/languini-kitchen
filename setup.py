@@ -22,7 +22,7 @@ Install for development:
 """
 
 install_requires_core = [
-    "torch>=2.0",
+    "torch==2.0",
     "numpy",
     "munch",
     "wandb",
@@ -31,7 +31,7 @@ install_requires_core = [
     "tqdm",
     "pandas",
     "jupyter",
-    "deepspeed",
+    "deepspeed==0.10.3",
     "seaborn",
 ]
 
