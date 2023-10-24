@@ -12,11 +12,22 @@ Enabling Language Modelling Research at Different Scales of Compute.
 <img src="robot.webp" alt="An image of a robot in a lagnuini kitchen." width="350"/>
 </div>
 
+## Index
+
+[Introduction](README.md#introduction) <br>
+[Download](README.md#preparations) <br>
+\- [Install Languini](README.md#install-languini) <br>
+\- [Download and tokenise the books3 dataset](README.md#download-and-tokenise-the-books3-dataset) <br>
+[How to run experiments](README.md#how-to-run-experiments) <br>
+[How to evaluate models on the languini books benchmark](README.md#how-to-evaluate-models-on-the-languini-books-benchmark) <br>
+[Step by step instructions for research on languini](README.md#step-by-step-instructions-for-research-on-languini) <br>
+[Frequently Asked Questions](README.md#frequently-asked-questions)
+
 ## Introduction
 
 Languini is designed to be a research codebase for the development of small language models. The code is easy to use, simple to understand, and hackable. Follow the instructions in the following Sections to learn how to install the languini pip package, how to run your own experiments, and how to evaluate your research on the languini books benchmark. If you have questions you should be able to find help on our discord channel or you can reach out to the authors of the Languini Kitchen paper. All relevant links can be found at the top of this readme.
 
-## Preparations
+## Download
 Download books3, tokenise Languini books, and get the Languini codebase ready for experiments.
 
 ### Install Languini
@@ -136,3 +147,22 @@ If you would like to share your work we recommend these additional steps.
 11. Create a push-request on the official languini-kitchen repository. 
 
 Successfully pushing your project to the official languini-kitchen repository will make it easier for others to see your work and build on it. New projects and results may be also mentioned in any of languini's social media channels.  
+
+
+## Frequently Asked Questions
+
+___Q: What does the ```train_batch_size``` argument describe?___
+
+The ```train_batch_size``` argument describes the number of sequences used for each step of the optimiser. This is a much more meaningful number than the size of a batch per accelerator or per gradient accumulation step. Internally, the ```train_batch_size``` argument is thus divided by the number of accelerators and gradient accumulation steps which results in the (local) batch size of an accelerator for each forward pass.
+
+___Q: Is the training on 8 accelerators equivalent to training on 1 accelerator with 8 gradient accumulation steps?___
+
+Yes, it is ***identical***. This required some changes in our custom dataloader and is probably best explained in an example. If your ```train_batch_size``` is e.g. 80, the dataloader will produce 80 parallel sequences. If you train on 8 GPUs, each GPU will process data in parallel from its exclusive 10 sequence streams and make updates to its exclusive 10 model states (in case the model is stateful). If you train on 1 GPU with 8 gradient accumulation steps, the same computation is performed sequentially.
+
+___Q: How does the dataloader load the books?___
+
+The dataloader creates ```train_batch_size``` streams. The books are loaded in a deterministic order and loaded into the shortest stream with the lowest index.
+
+___Q: Why is does the throughput print during training not match the published throughput results?___
+
+Throughput is measured ***before*** training using the `languini/common_lib/throughput.py` and `languini/common_lib/throughput_sweep.py` scripts. These scripts feed random indices to the model and measure the average time it takes to perform a forward pass, backward pass, and weight update. This allows the researcher to calculate the number of tokens they can process for specific levels of compute and also allows them to train the model on hardware that is different from the reference hardware. The throughput logs created during training can vary due to the hardware, the load of the entire system, or other potential bottlenecks like memory transfer, disk reading speed, or network speed (in the case of distributed training).
