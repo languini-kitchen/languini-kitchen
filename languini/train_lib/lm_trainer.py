@@ -389,7 +389,7 @@ class LMTrainer:
                 
                 # log general speed metrics - only do so when we are not doing some extra logging (activations or gradients)
                 if not do_grads_log and not do_activations_log:
-                    tokens_per_batch = batch_x.shape.numel()
+                    tokens_per_batch = total_batch_x.numel()
                     load_time_per_batch = load_watch.read()
                     forward_time_per_batch = forward_watch.read()
                     backward_time_per_batch = backward_watch.read()
