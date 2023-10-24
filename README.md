@@ -12,10 +12,8 @@ Enabling Language Modelling Research at Different Scales of Compute.
 <img src="robot.webp" alt="An image of a robot in a lagnuini kitchen." width="350"/>
 </div>
 
-## Index
-
 [Introduction](README.md#introduction) <br>
-[Download](README.md#preparations) <br>
+[Download](README.md#download) <br>
 \- [Install Languini](README.md#install-languini) <br>
 \- [Download and tokenise the books3 dataset](README.md#download-and-tokenise-the-books3-dataset) <br>
 [How to run experiments](README.md#how-to-run-experiments) <br>
