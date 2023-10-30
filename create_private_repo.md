@@ -7,11 +7,11 @@ Instead of a public fork you may want to use the languini codebase but keep your
 ```
 git clone --bare https://github.com/languini-kitchen/languini-kitchen.git
 cd languini-kitchen.git
-git push --mirror https://github.com/ischlag/my_languini_model.git
+git push --mirror https://github.com/ischlag/my_private_languini_repo.git
 cd ..
-rm -rf my_languini_model.git
-git clone https://github.com/ischlag/my_languini_model.git
-cd my_languini_model
+rm -rf languini-kitchen.git
+git clone https://github.com/ischlag/my_private_languini_repo.git
+cd my_private_languini_repo
 ```
 
 3. Proceed with the installation
