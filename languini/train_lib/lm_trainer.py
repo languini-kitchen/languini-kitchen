@@ -61,7 +61,7 @@ def evaluation(config, model, state, data_source, max_steps, last_n=-1, print_pr
         print_progress (bool): simple terminal log for eval.py to display progress.
     """
     c = config
-    local_bsz = config.eval_batch_size // c.n_gpus
+    local_bsz = config.eval_batch_size // c.n_workers
 
     assert last_n <= c.seq_len and last_n != 0, "we cannot eval on the last_n=0 tokens or more tokens than there are in a sequence!"
     assert all(common_utils.flatten(common_utils.traverse(state, func=lambda x: x is None or x.shape[0] == 1))), "all state elements must have batch size 1!"
@@ -276,7 +276,7 @@ class LMTrainer:
 
             load_watch.start()
             total_batch_x, total_batch_y, _ = next(self.train_batches)
-            check(total_batch_x, (c.gradient_accumulation_steps, c.train_batch_size // c.gradient_accumulation_steps // c.n_gpus, c.seq_len))
+            check(total_batch_x, (c.gradient_accumulation_steps, c.train_batch_size // c.gradient_accumulation_steps // c.n_workers, c.seq_len))
             load_watch.pause().count()
 
             for micro_step in range(c.gradient_accumulation_steps):
@@ -287,7 +287,7 @@ class LMTrainer:
                 # select the current micro batch
                 batch_x = total_batch_x[micro_step]
                 batch_y = total_batch_y[micro_step]
-                check(batch_x, (c.train_batch_size // c.gradient_accumulation_steps // c.n_gpus, c.seq_len))
+                check(batch_x, (c.train_batch_size // c.gradient_accumulation_steps // c.n_workers, c.seq_len))
                 bsz, seqlen = batch_x.shape
                 
                 # run forward pass

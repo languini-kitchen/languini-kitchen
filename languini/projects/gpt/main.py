@@ -52,10 +52,10 @@ from model import Model
 def run(config, logger):
     c = config
     
-    mprint(f"{c.n_gpus} GPUs detected. Using DistributedDataParallel. Local rank: {LOCAL_RANK}")
-    mprint(f"train batch size per GPU: {c.train_batch_size // WORLD_SIZE}")
-    mprint(f"eval batch size per GPU: {c.eval_batch_size // WORLD_SIZE}")
-    mprint(f"test batch size per GPU: {c.test_batch_size // WORLD_SIZE}")
+    mprint(f"{c.n_workers} workers detected. Using DistributedDataParallel. Local rank: {LOCAL_RANK}")
+    mprint(f"train batch size per worker/GPU: {c.train_batch_size // WORLD_SIZE}")
+    mprint(f"eval batch size per worker/GPU: {c.eval_batch_size // WORLD_SIZE}")
+    mprint(f"test batch size per worker/GPU: {c.test_batch_size // WORLD_SIZE}")
     mprint(f"gradient accumulation steps: {c.gradient_accumulation_steps}")
 
     mprint(f"WORLD_SIZE: {WORLD_SIZE}")  # total number of devices

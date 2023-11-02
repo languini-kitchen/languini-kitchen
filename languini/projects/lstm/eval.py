@@ -16,7 +16,7 @@
 
 # Example
 
-P=languini/projects/lstm/logs/quasiLSTM_bl16_books16384_bsz160_micro1_sl512_coslr0.0006to6e-06_h768_ff3072_nH12_dH64_nl12_clip0.0_decay47k_gpus8_defaultCompile_fp16
+P=languini/projects/lstm/logs/quasiLSTM_bl16_books16384_bsz160_micro1_sl512_coslr0.0006to6e-06_h768_ff3072_nH12_dH64_nl12_clip0.0_decay47k_workers8_defaultCompile_fp16
 CUDA_VISIBLE_DEVICES=0 torchrun --standalone languini/projects/lstm/eval.py \
         --checkpoint_file "$P"/checkpoints/model.pt \
         --config_file "$P"/config.pickle \
@@ -61,9 +61,9 @@ def run(config):
     model = model.to(f"cuda:{LOCAL_RANK}")
 
     # some qlstm models were trained with an earlier version of the codebase which didn't use DDP if training was done on a single gpu.
-    if c.n_gpus > 1:
+    if c.n_workers > 1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[LOCAL_RANK])  # we always use DDP so we can easily load models 
-    c.n_gpus = 1  # n_gpus must be set to 1 for evaluation in order to compute the correct local batch size
+    c.n_workers = 1  # n_workers must be set to 1 for evaluation in order to compute the correct local batch size
     model, curr_state = train_utils.load_checkpoint(model, c.checkpoint_file)
     mprint(f"Model checkpoint and state loaded from {c.checkpoint_file}")
     

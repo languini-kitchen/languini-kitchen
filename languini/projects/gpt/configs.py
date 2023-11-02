@@ -28,7 +28,7 @@ config_names = [
 def add_exp_name(config):
     """Constructs the name of the log folder used to easily identify the experiment. """
     c = config
-    c.exp_name = ("GPT{}_{}_bsz{}{}_sl{}_coslr{}to{}_h{}_ff{}_nH{}_dH{}_nl{}_clip{}_decay{}k_gpus{}{}_fp16_seed{}{}"
+    c.exp_name = ("GPT{}_{}_bsz{}{}_sl{}_coslr{}to{}_h{}_ff{}_nH{}_dH{}_nl{}_clip{}_decay{}k_workers{}{}_fp16_seed{}{}"
                   .format("_flash" if c.use_flash else "",
                           c.dataset.replace("_", ""),
                           c.train_batch_size,
@@ -43,7 +43,7 @@ def add_exp_name(config):
                           c.n_layers,
                           c.grad_clip_norm,
                           c.decay_steps // 1_000,
-                          c.n_gpus,
+                          c.n_workers,
                           "" if c.compile == "None" else f"_{c.compile}Compile",
                           c.seed,
                           "_debug" if c.debug else "")                          
