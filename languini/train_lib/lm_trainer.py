@@ -76,7 +76,7 @@ def evaluation(config, model, state, data_source, max_steps, last_n=-1, print_pr
     total_token_count = 0
 
     with torch.no_grad():
-        with torch.cuda.amp.autocast():
+        with torch.cuda.amp.autocast(enabled=c.device.type == "cuda"):
             # distribute the given state over the batch-size
             if state is None:
                 if isinstance(model, torch.nn.parallel.DistributedDataParallel):
@@ -220,7 +220,7 @@ class LMTrainer:
         self.scheduler = scheduler
         self.train_batches = train_batches
         self.eval_batches = eval_batches
-        self.scaler = torch.cuda.amp.GradScaler()
+        self.scaler = torch.cuda.amp.GradScaler(enabled=c.device.type == "cuda")
 
         # log hyperparameters
         train_utils.log_hyperparams(config, self.logger)
@@ -291,7 +291,7 @@ class LMTrainer:
                 bsz, seqlen = batch_x.shape
                 
                 # run forward pass
-                with torch.cuda.amp.autocast():
+                with torch.cuda.amp.autocast(enabled=c.device.type == "cuda"):
                     # get initial state
                     if curr_state is None:
                         if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):

@@ -63,7 +63,6 @@ def run(config, logger):
     mprint(f"WORLD_SIZE: {WORLD_SIZE}")  # total number of devices
     mprint(f"WORLD_RANK: {WORLD_RANK}")  # unique id within all devices
     mprint(f"LOCAL_RANK: {LOCAL_RANK}")  # unique id within the devices of this node
-    c.device = f"cuda:{LOCAL_RANK}"
 
     mprint("Setup data sources ... ")
     # Compute the batch indices for this accelerator.
@@ -104,7 +103,7 @@ def run(config, logger):
     model = Model(config=c)
     if c.compile and c.compile != "None":
         model = torch.compile(model, mode=c.compile)
-    model = model.to(f"cuda:{LOCAL_RANK}")
+    model = model.to(c.device)
     if WORLD_SIZE > 1:
         mprint("running on multiple devices ...")
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[LOCAL_RANK])
@@ -137,7 +136,7 @@ def main():
     """Runs a Languini experiment using an LSTM model."""
 
     # initialise distributed processes
-    parallel_utils.init_distributed()
+    device = parallel_utils.init_distributed()
     mp.set_start_method("spawn")
 
     mprint("Languini Experiment")
@@ -159,6 +158,7 @@ def main():
     args = parser.parse_args(sys.argv[2:])
     config = experiment_utils.update_config_given_args(config, args)
     config.project_path = project_path
+    config.device = device
     
     # Check if the config matches the available hardware
     config = experiment_utils.check_hardware(config, world_size=WORLD_SIZE)

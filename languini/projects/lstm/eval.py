@@ -51,18 +51,18 @@ def run(config):
     mprint(f"WORLD_SIZE: {WORLD_SIZE}")  # total number of devices
     mprint(f"WORLD_RANK: {WORLD_RANK}")  # unique id within all devices
     mprint(f"LOCAL_RANK: {LOCAL_RANK}")  # unique id within the devices of this node
-    c.device = f"cuda:{LOCAL_RANK}"
 
     # Build model and load it from checkpoint
     torch.manual_seed(c.seed)
     model = Model(config=c)
     if c.compile != "None":
         model = torch.compile(model, mode=c.compile)
-    model = model.to(f"cuda:{LOCAL_RANK}")
+    model = model.to(c.device)
 
     # some qlstm models were trained with an earlier version of the codebase which didn't use DDP if training was done on a single gpu.
     if c.n_workers > 1:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[LOCAL_RANK])  # we always use DDP so we can easily load models 
+        device_ids = [LOCAL_RANK] if c.device.type == "cuda" else None
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=device_ids)  # we always use DDP so we can easily load models 
     c.n_workers = 1  # n_workers must be set to 1 for evaluation in order to compute the correct local batch size
     model, curr_state = train_utils.load_checkpoint(model, c.checkpoint_file)
     mprint(f"Model checkpoint and state loaded from {c.checkpoint_file}")
@@ -147,7 +147,7 @@ def main():
     """Load relevant args and evaluate on some data split."""
 
     # initialise distributed processes
-    parallel_utils.init_distributed()
+    device = parallel_utils.init_distributed()
     mp.set_start_method("spawn")
 
     mprint("Languini Evaluation")
@@ -171,6 +171,7 @@ def main():
         assert os.path.exists(config.data_root), f"The data root in the loaded config file does not exist ({config.data_root}). Set a custom data root using --data_root."
     config.checkpoint_file = args.checkpoint_file
     config.eval_data_split = args.eval_data_split
+    config.device = device
 
     run(config)
 
