@@ -348,9 +348,12 @@ class LMTrainer:
             dist.reduce(avg_loss, op=dist.ReduceOp.SUM, dst=0)
             avg_loss = avg_loss.detach().item() / (parallel_utils.WORLD_SIZE * c.gradient_accumulation_steps)
             
+            # unscale gradients before clipping and logging
+            if self.scaler:
+                self.scaler.unscale_(self.opt)
+
             # clip gradients if clip is larger than 0.0
             if c.grad_clip_norm > 0.0:
-                self.scaler.unscale_(self.opt)
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), c.grad_clip_norm)
 
             # perform an optimiser step and log weights, gradients, and step sizes
