@@ -29,8 +29,8 @@ class CustomLog:
     def to_tensorboard(self, name: str, summary_writer, global_step: int):
         pass
 
-    def to_wandb(self):
-        return None
+    def to_wandb(self, name: str, global_step: int):
+        pass
 
 
 class Scalar(CustomLog):
@@ -43,8 +43,8 @@ class Scalar(CustomLog):
     def to_tensorboard(self, name, summary_writer, global_step):
         summary_writer.add_scalar(name, self.val, global_step)
 
-    def to_wandb(self):
-        return self.val
+    def to_wandb(self, name, global_step):
+        wandb.log({name: self.val}, step=global_step)
 
 
 class Scalars(CustomLog):
@@ -56,8 +56,11 @@ class Scalars(CustomLog):
         v = {k: v for k, v in self.values.items() if v == v}
         summary_writer.add_scalars(name, v, global_step)
 
-    def to_wandb(self):
-        return self.values
+    def to_wandb(self, name, global_step):
+        wandbdict = {}
+        for k, v in v.items():
+            wandbdict[name+"/"+k] = v
+        wandb.log(wandbdict, step=global_step)
 
 
 class TextTable(CustomLog):
@@ -73,8 +76,44 @@ class TextTable(CustomLog):
     def to_tensorboard(self, name, summary_writer, global_step):
         summary_writer.add_text(name, self.to_markdown(), global_step)
 
-    def to_wandb(self):
-        return wandb.Table(data=self.data, columns=self.header)
+    def to_wandb(self, name, global_step):
+        wandb.log(
+            {name: wandb.Table(data=self.data, columns=self.header)},
+            step=global_step,
+        )
+
+
+class Figure(CustomLog):
+    def __init__(self, val: plt.Figure):
+        self.val = val
+
+    def to_tensorboard(self, name, summary_writer, global_step):
+        summary_writer.add_figure(name, self.val, global_step)
+
+    def to_wandb(self, name, global_step):
+        wandb.log({name: self.val}, step=global_step)
+
+
+def to_log_object(val):
+    """Converts a value to a loggable object."""
+    if isinstance(val, CustomLog):
+        return val
+    if torch.is_tensor(val):
+        if val.nelement() == 1:
+            return Scalar(float(val))
+        else:
+            raise ValueError("Cannot log tensor with more than one element")
+    elif isinstance(val, np.ndarray):
+        if val.size == 1:
+            return Scalar(float(val))
+        else:
+            raise ValueError("Cannot log array with more than one element")
+    elif isinstance(val, (int, float)):
+        return Scalar(val)
+    elif isinstance(val, plt.Figure):
+        return Figure(val)
+    else:
+        raise ValueError(f"Cannot log type {type(val)}")
 
 
 class Logger:
@@ -141,38 +180,13 @@ class Logger:
         if not dict_of_elems:
             return
 
-        dict_of_elems = {k: v.item() if torch.is_tensor(v) and v.nelement()==1 else v for k, v in dict_of_elems.items()}
-        dict_of_elems = {k: Scalar(v) if isinstance(v, (int, float)) else v for k, v in dict_of_elems.items()}
+        for k, v in dict_of_elems.items():
+            v = to_log_object(v)
+            if self.use_wandb:
+                v.to_wandb(k, step)
+            if self.tb_writer is not None:
+                v.to_tensorboard(k, self.tb_writer, step)
 
-        if self.use_wandb:
-            wandbdict = {}
-            for k, v in dict_of_elems.items():
-                if isinstance(v, CustomLog):
-                    v = v.to_wandb()
-                    if v is None:
-                        continue
-
-                    if isinstance(v, dict):
-                        for k2, v2 in v.items():
-                            wandbdict[k+"/"+k2] = v2
-                    else:
-                        wandbdict[k] = v
-                elif isinstance(v, plt.Figure):
-                    wandbdict[k] = v
-                else:
-                    assert False, f"Invalid data type {type(v)}"
-
-            wandbdict["step"] = step
-            wandb.log(wandbdict)
-
-        if self.tb_writer is not None:
-            for k, v in dict_of_elems.items():
-                if isinstance(v, CustomLog):
-                    v.to_tensorboard(k, self.tb_writer, step)
-                elif isinstance(v, plt.Figure):
-                    self.tb_writer.add_figure(k, v, step)
-                else:
-                    assert False, f"Unsupported type {type(v)} for entry {k}"
     
     def log_text(self, log_key: str, log_text: str, step: Optional[int] = None):
         if not self.is_main:
