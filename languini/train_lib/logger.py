@@ -47,6 +47,36 @@ class Scalar(CustomLog):
         wandb.log({name: self.val}, step=global_step)
 
 
+class CustomXAxisScalar(CustomLog):
+    defined_metrics = {}
+    
+    def __init__(self, val: Union[torch.Tensor, np.ndarray, int, float], axis_name: str, axis_val: float):
+        self.val = float(val)
+
+        self.axis_metric_name = "x_axes/" + axis_name
+        self.axis_val = axis_val
+    
+    def to_tensorboard(self, name: str, summary_writer, global_step: int):
+        # set step to axis_val
+        summary_writer.add_scalar(name, self.val, self.axis_val)
+    
+    def to_wandb(self, name: str, global_step: int):
+        # make sure that name is defined as metric with the correct axis
+        if name in CustomXAxisScalar.defined_metrics:
+            if CustomXAxisScalar.defined_metrics[name] != self.axis_metric_name:
+                raise ValueError(f"{name} is already defined as metric with a different x-axis")
+        else:
+            wandb.define_metric(name, step_metric=self.axis_metric_name)
+            CustomXAxisScalar.defined_metrics[name] = self.axis_metric_name
+
+        # wandb requires logging of axis value as separate metric
+        wandbdict = {
+            self.axis_metric_name: self.axis_val,
+            name: self.val,
+        }
+        wandb.log(wandbdict, step=global_step)
+        
+
 class Scalars(CustomLog):
     def __init__(self, scalar_dict: Dict[str, Union[torch.Tensor, np.ndarray, int, float]]):
         self.values = {k: v.item() if torch.is_tensor(v) else v for k, v in scalar_dict.items()}
