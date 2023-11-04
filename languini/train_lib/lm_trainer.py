@@ -459,7 +459,7 @@ class LMTrainer:
         eval_topk_accs = {key: eval_total_topk[key] / eval_token_count for key in eval_total_topk.keys()}
 
         if parallel_utils.is_main_process():
-            number_of_tokens = step * c.train_batch_size * c.seq_len
+            number_of_tokens = (step + 1) * c.train_batch_size * c.seq_len # +1 as steps 0-indexed
             theoretical_gpu_seconds = number_of_tokens / c.tokens_per_second if c.tokens_per_second > 0 else 0  
             # Note, you cannot log floating point 'steps' so you cannot compute gpu hours here.
             def log_over_all_axes(name, value):
