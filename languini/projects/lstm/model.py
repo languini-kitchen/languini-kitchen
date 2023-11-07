@@ -121,10 +121,14 @@ if __name__ == "__main__":
     c.block_length = 32
     c.seq_len = 512
     c.vocab_size = 666
-    c.device = 'cuda'
     c.is_quasi = True
-    c.n_gpus = torch.cuda.device_count()
-    c.device_batch_size = c.batch_size // c.n_gpus
+    if torch.cuda.is_available():
+        c.device = 'cuda'
+        c.n_workers = torch.cuda.device_count()
+    else:
+        c.device = "cpu"
+        c.n_workers = 1
+    c.device_batch_size = c.batch_size // c.n_workers
 
     model = Model(config=c).to(c.device)
 

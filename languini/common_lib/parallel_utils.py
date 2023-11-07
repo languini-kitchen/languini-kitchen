@@ -22,16 +22,31 @@ WORLD_SIZE = int(os.environ['WORLD_SIZE']) if 'WORLD_SIZE' in os.environ else No
 WORLD_RANK = int(os.environ['RANK']) if 'RANK' in os.environ else None
 
 
-def init_distributed(backend="nccl"):
+def get_device():
+    if torch.cuda.is_available():
+        return torch.device(f"cuda:{LOCAL_RANK}")
+    else:
+        return torch.device("cpu")
+
+
+def init_distributed():
+    device = get_device()
+    if device.type == "cuda":
+        backend = 'nccl'
+        # this will make all .cuda() calls work properly
+        torch.cuda.set_device(device)
+    else:
+        # no nccl available
+        backend = "gloo"
+
     # Initializes the distributed backend which will take care of synchronizing nodes/GPUs
     dist.init_process_group(backend, rank=WORLD_RANK, world_size=WORLD_SIZE)
     print(f"Start running distributed data-parallel experiment on global rank {WORLD_RANK} and local rank {LOCAL_RANK}.")
 
-    # this will make all .cuda() calls work properly
-    torch.cuda.set_device(f"cuda:{LOCAL_RANK}")
-
     # synchronizes all the threads to reach this point before moving on
     dist.barrier()
+
+    return device
 
 
 def is_dist_avail_and_initialized():

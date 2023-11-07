@@ -25,13 +25,13 @@ from languini.common_lib.parallel_utils import is_main_process
 
 
 def check_hardware(config, world_size):
-    config.n_gpus = world_size
-    assert config.train_batch_size % config.n_gpus == 0, \
-            f"Ensure that train_batch_size ({config.train_batch_size}) is a multiple of the number of GPUs available ({config.n_gpus})."
-    assert config.eval_batch_size % config.n_gpus == 0, \
-            f"Ensure that eval_batch_size ({config.eval_batch_size}) is a multiple of the number of GPUs available ({config.n_gpus})."
-    assert config.test_batch_size % config.n_gpus == 0, \
-            f"Ensure that test_batch_size ({config.test_batch_size}) is a multiple of the number of GPUs available ({config.n_gpus})."
+    config.n_workers = world_size
+    assert config.train_batch_size % config.n_workers == 0, \
+            f"Ensure that train_batch_size ({config.train_batch_size}) is a multiple of the number of GPUs available ({config.n_workers})."
+    assert config.eval_batch_size % config.n_workers == 0, \
+            f"Ensure that eval_batch_size ({config.eval_batch_size}) is a multiple of the number of GPUs available ({config.n_workers})."
+    assert config.test_batch_size % config.n_workers == 0, \
+            f"Ensure that test_batch_size ({config.test_batch_size}) is a multiple of the number of GPUs available ({config.n_workers})."
     return config
 
 def setup_log_folder(log_path):
