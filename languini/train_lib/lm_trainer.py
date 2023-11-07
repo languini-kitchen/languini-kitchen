@@ -25,6 +25,7 @@ from languini.common_lib import debug_utils
 from languini.common_lib import common_utils
 from languini.common_lib import parallel_utils
 from languini.common_lib.debug_utils import check
+from languini.train_lib.logger import CustomXAxisScalar
 
 
 DEFAULT_CONFIG = {
@@ -461,32 +462,34 @@ class LMTrainer:
         eval_topk_accs = {key: eval_total_topk[key] / eval_token_count for key in eval_total_topk.keys()}
 
         if parallel_utils.is_main_process():
-            number_of_tokens = step * c.train_batch_size * c.seq_len
+            number_of_tokens = (step + 1) * c.train_batch_size * c.seq_len # +1 as steps 0-indexed
             theoretical_gpu_seconds = number_of_tokens / c.tokens_per_second if c.tokens_per_second > 0 else 0  
             # Note, you cannot log floating point 'steps' so you cannot compute gpu hours here.
+            def log_over_all_axes(name, value):
+                """Logs value over steps, tokens, and gpu seconds."""
+                metrics = {
+                    name: value,
+                    f"{name}_over_tokens": CustomXAxisScalar(value, axis_name="n_tokens", axis_val=number_of_tokens),
+                    f"{name}_over_gpuseconds": CustomXAxisScalar(value, axis_name="gpu_seconds", axis_val=theoretical_gpu_seconds),
+                }
+                self.logger.log(metrics, step)
+
+            log_over_all_axes("_eval/normalised_loss", eval_norm_loss)
             self.logger.log(
                 {
                     "_eval/loss": eval_avg_loss,
-                    "_eval/normalised_loss": eval_norm_loss,
                     "_eval/total_loss": eval_total_loss,
                 },
                 step
             )
-            self.logger.log({"_eval/normalised_loss_over_tokens": eval_norm_loss}, number_of_tokens)
-            self.logger.log({"_eval/normalised_loss_over_gpuseconds": eval_norm_loss}, theoretical_gpu_seconds)
+
             # skip ppl logging for initial loss which skews the plot unnecessarily
             if eval_ppl < 1_000:
-                self.logger.log({"_eval/ppl": eval_ppl}, step)
-                self.logger.log({"_eval/ppl_over_tokens": eval_ppl}, number_of_tokens)
-                self.logger.log({"_eval/ppl_over_gpuseconds": eval_ppl}, theoretical_gpu_seconds)
+                log_over_all_axes("_eval/ppl", eval_ppl)    
             if eval_norm_ppl < 1_000:
-                self.logger.log({"_eval/normalised_ppl": eval_norm_ppl}, step)
-                self.logger.log({"_eval/normalised_ppl_over_tokens": eval_norm_ppl}, number_of_tokens)
-                self.logger.log({"_eval/normalised_ppl_over_gpuseconds": eval_norm_ppl}, theoretical_gpu_seconds)
+                log_over_all_axes("_eval/normalised_ppl", eval_norm_ppl)
             for key in eval_topk_accs:
-                self.logger.log({f"_eval/top{key}_acc": eval_topk_accs[key]}, step)
-                self.logger.log({f"_eval/top{key}_acc_over_tokens": eval_topk_accs[key]}, number_of_tokens)
-                self.logger.log({f"_eval/top{key}_acc_over_gpuseconds": eval_topk_accs[key]}, theoretical_gpu_seconds)
+                log_over_all_axes(f"_eval/top{key}_acc", eval_topk_accs[key])
             print(f"EVAL step={step:d} loss={eval_avg_loss:0.5f} acc={eval_topk_accs[1]:0.5f}") 
 
     def save_checkpoint(self, logger, step):
