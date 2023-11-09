@@ -115,6 +115,7 @@ def main():
     pickle_dict['head_dim'] = config.head_dim
     pickle_dict['n_heads'] = config.n_heads
     pickle_dict['compile'] = config.compile
+    #pickle_dict['use_flash'] = config.use_flash
     pickle_dict.update(result)
 
     if args.results_pickle_file:
