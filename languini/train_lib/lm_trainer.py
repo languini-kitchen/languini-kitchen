@@ -14,6 +14,7 @@
 
 import os
 import math
+import itertools
 import torch
 import sentencepiece as spm
 import torch.nn.functional as F
@@ -70,6 +71,7 @@ def evaluation(config, model, state, data_source, max_steps, last_n=-1, print_pr
 
     model.eval()
     data_source.reset()
+    eval_batches = data_source if max_steps == -1 else itertools.islice(data_source, max_steps)
 
     batch_count = 0
     total_loss = 0
@@ -88,24 +90,17 @@ def evaluation(config, model, state, data_source, max_steps, last_n=-1, print_pr
                 # we distribute the same state across all batch elements
                 state = common_utils.traverse(state, func=lambda x: torch.concatenate([x] * local_bsz) if x is not None else None)
             
-            # iterate over batches
-            if print_progress and max_steps > 0: 
-                progress_bar = tqdm(range(max_steps))
-            while max_steps == -1 or batch_count <= max_steps:
-                if print_progress and max_steps > 0:
-                    progress_bar.update(1)
-                    progress_bar.refresh()
-                elif print_progress and batch_count % 1_000 == 0 and batch_count > 0:
-                    parallel_utils.mprint(f"{batch_count:d}")
+            if print_progress:
+                eval_batches = tqdm(eval_batches, total=None if max_steps == -1 else max_steps)
 
-                try:
-                    # take the next training batch
-                    batch_x, batch_y, is_padded = next(data_source)
-                    batch_x = batch_x[0]
-                    batch_y = batch_y[0]
-                    bsz, seqlen = batch_x.shape
-                except StopIteration:
-                    break
+            # iterate over batches
+            for batch_count, (batch_x, batch_y, is_padded) in enumerate(eval_batches, start=1):
+                if print_progress and batch_count % 1_000 == 0:
+                    parallel_utils.mprint(f"{batch_count:d}")
+                
+                assert batch_x.shape[0] == batch_y.shape[0] == 1, "evaluation only implemented for single worker"
+                batch_x, batch_y = batch_x.squeeze(0), batch_y.squeeze(0)
+                bsz, seqlen = batch_x.shape
                 
                 # run the forward pass
                 logits, state = model(batch_x, state, log=None)
@@ -143,7 +138,6 @@ def evaluation(config, model, state, data_source, max_steps, last_n=-1, print_pr
 
                 total_loss += torch.sum(all_losses).reshape((-1,)).detach()
                 total_token_count += token_count.reshape((-1,))
-                batch_count += 1
         
         parallel_utils.mprint(f'total number of batches processed: {batch_count}')
         dist.all_reduce(total_loss, dist.ReduceOp.SUM)
@@ -155,8 +149,8 @@ def evaluation(config, model, state, data_source, max_steps, last_n=-1, print_pr
 def log_eval_stats(eval_data_source, eval_steps, last_n, sp, logger, device):
     """Counts the number of eval batches and the length in string bytes. Saves these values for later."""
     eval_data_source.reset()
-    eval_batches = [(batch_x, batch_y, is_padded) for i, (batch_x, batch_y, is_padded) in enumerate(eval_data_source) if eval_steps == -1 or i < eval_steps]
-    batch_count = len(eval_batches)
+    eval_batches = eval_data_source if eval_steps == -1 else itertools.islice(eval_data_source, eval_steps)
+    batch_count = 0
 
     micro_batches = eval_data_source.micro_batches
     local_micro_bsz = eval_data_source.bsz // eval_data_source.micro_batches
@@ -165,7 +159,7 @@ def log_eval_stats(eval_data_source, eval_steps, last_n, sp, logger, device):
     # use tensors to count in case it is distributed across accelerators
     token_count = torch.zeros(1, device=device)
     str_length = torch.zeros(1, device=device)
-    for (batch_x, batch_y, is_padded) in eval_batches:
+    for batch_count, (batch_x, batch_y, is_padded) in enumerate(eval_batches, start=1):
         check(batch_x, (micro_batches, local_micro_bsz, seqlen))
         check(batch_y, (micro_batches, local_micro_bsz, seqlen))
 
