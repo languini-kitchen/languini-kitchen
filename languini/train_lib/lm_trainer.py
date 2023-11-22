@@ -128,14 +128,12 @@ def evaluation(config, model, state, data_source, max_steps, last_n=-1, print_pr
                 check(all_losses, (bsz * last_n,))
 
                 # mask losses that are padded (unlike training, evaluation can result in batches with padded batches)
-                if is_padded:
-                    all_losses = all_losses.masked_fill(batch_x.reshape(-1) == 0, 0.0)
-                    token_count = torch.sum(batch_x != 0)
-                else:
-                    token_count = torch.tensor([batch_x.numel()], device=all_losses.device)
+                is_padding = batch_x.reshape(-1) == 0 # (bsz * last_n,)
+                all_losses = all_losses.masked_fill(is_padding, 0.0)
+                token_count = torch.sum(~is_padding)
 
                 # compute accuracy for top-1 and top-10
-                topk_counts = train_utils.total_correct(logits, batch_y, topk=(1, 10))
+                topk_counts = train_utils.total_correct(logits, batch_y, is_padding=is_padding, topk=(1, 10))
                 for key in topk_counts.keys():
                     dist.all_reduce(topk_counts[key], dist.ReduceOp.SUM)
                     if key in total_top_k_counts.keys():
