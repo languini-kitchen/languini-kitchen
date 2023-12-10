@@ -122,11 +122,21 @@ def print_model_size(model, vocab_size, h_dim, logger):
     mprint('-' * line_len)
 
 
-def total_correct(logits, target, topk=(1,)):
+def total_correct(logits, target, is_padding, topk=(1,)):
     """
     Computes the accuracy over the k top predictions.
+
+    Args:
+      logits: logits (batch_size, vocab_size)
+      target: target labels (batch_size)
+      is_padding: True where data is padding and should be ignored (batch_size)
+      topk: list of integers specifying which top-k to compute
+    
+    Returns:
+      topk_counts: dict of k -> number of correct predictions for that topk (ignoring padding)
     """
     assert logits.shape[0] == target.shape[0], "shape mismatch in dim=0 for logits and targets"
+    assert target.shape == is_padding.shape and target.ndim == 1
 
     topk_counts = {}
 
@@ -138,11 +148,11 @@ def total_correct(logits, target, topk=(1,)):
         preds = preds.t()
         check(preds, (maxk, bsz))
 
-        target = target.view(1, -1).expand_as(preds)
-        check(target, (maxk, bsz))
-
         # compare
-        correct = (preds == target)
+        correct = (preds == target.unsqueeze(0))
+
+        # ignore padding
+        correct &= ~is_padding.unsqueeze(0)
 
         for k in topk:          
           # get top k predictions
