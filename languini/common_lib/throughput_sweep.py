@@ -83,7 +83,7 @@ def main():
                 command_args_string += f' --{k}={v}'
 
         command = f'CUDA_VISIBLE_DEVICES={config.gpu} python3 {utils_path}/throughput.py {project_name} {config_name} --results_pickle_file={throughput_file} --train_batch_size={curr_batch_size} {command_args_string}'
-        print("Evaluating throughput ...")
+        print("\nEvaluating throughput ...")
         os.system(command)
 
         # Check if evaluation ran out of memory
@@ -104,7 +104,7 @@ def main():
 
             # Call the flops script. 
             command = f'CUDA_VISIBLE_DEVICES={config.gpu} python3 {utils_path}/flops_profile.py {project_name} {config_name} --results_pickle_file={flops_file} --train_batch_size={curr_batch_size} {command_args_string}'
-            print("Evaluating flops ...")
+            print("\nEvaluating flops ... (can be out of memory before throughput)")
             os.system(command)
 
             # Evaluate flops result

@@ -247,7 +247,7 @@ class LMTrainer:
         forward_watch = train_utils.StopWatch()     # forward pass
         backward_watch = train_utils.StopWatch()    # backward pass
         train_watch = train_utils.StopWatch()       # train step
-        eval_watch = train_utils.StopWatch()       # evaluation
+        eval_watch = train_utils.StopWatch()        # evaluation
         total_watch = train_utils.StopWatch()       # total step
         tokens_seen = 0                             # total number of tokens seen
         
