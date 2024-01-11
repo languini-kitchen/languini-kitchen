@@ -1,6 +1,6 @@
 # Quasi-LSTM Baseline Model
 
-This is our LSTM and quasi LSTM implementation (use --is_quasi). An RNN that stays as true to the classic LSTM as possible while making changes to improve throughput. See the Languini Kitchen paper for details.
+This is our LSTM (use --non_quasi) and quasi LSTM implementation (default). An RNN that stays as true to the classic LSTM as possible while making changes to improve throughput. See the Languini Kitchen paper for details.
 
 Run the following command to see if you can load the model and feed it a batch of dummy data.
 ```
@@ -14,7 +14,6 @@ The following configs achieve the best results for the 6h, 12h, 24h, 48h, and 96
 6h: qLSTM mini, bsz 80, seqlen 512 -> 94781 tokens per second, 49982 steps, 1 gradient accumulation step
 ```
 CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=1 --master_addr=localhost --master_port=12300 languini/projects/lstm/main.py mini \
-  --is_quasi \
   --train_batch_size 80 \
   --decay_steps 49982 \
   --max_train_steps 49982 \
@@ -29,7 +28,6 @@ CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=1 --ma
 12h: qLSTM tiny, bsz 80, seqlen 512 -> 36930 tokens per second, 38950 steps, 2 gradient accumulation step
 ```
 CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=1 --master_addr=localhost --master_port=12300 languini/projects/lstm/main.py tiny \
-  --is_quasi \
   --train_batch_size 80 \
   --decay_steps 38950 \
   --max_train_steps 38950 \
@@ -44,7 +42,6 @@ CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=1 --ma
 24h: qLSTM small, bsz 84, seqlen 512 -> 11143 tokens per second, 22385 steps, 6 gradient accumulation step
 ```
 CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=1 --master_addr=localhost --master_port=12300 languini/projects/lstm/main.py small \
-  --is_quasi \
   --train_batch_size 84 \
   --decay_steps 22385 \
   --max_train_steps 22385 \
@@ -59,7 +56,6 @@ CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=1 --ma
 48h: qLSTM small, bsz 80, seqlen 512 -> 11143 tokens per second, 47010 steps, 5 gradient accumulation step
 ```
 CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=1 --master_addr=localhost --master_port=12300 languini/projects/lstm/main.py small \
-  --is_quasi \
   --train_batch_size 80 \
   --decay_steps 47010 \
   --max_train_steps 47010 \
@@ -74,7 +70,6 @@ CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=1 --ma
 96h: qLSTM small, bsz 160, seqlen 512 -> 11143 tokens per second, 47010 steps, 10 gradient accumulation step
 ```
 CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=1 --master_addr=localhost --master_port=12300 languini/projects/lstm/main.py small \
-  --is_quasi \
   --train_batch_size 160 \
   --decay_steps 47010 \
   --max_train_steps 47010 \

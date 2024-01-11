@@ -75,19 +75,19 @@ class MultiHeadLSTMCell(nn.Module):
     torch.nn.init.zeros_(self.linear_Ox.bias)
 
     # linear projections of the state (done in sequence)
-    self.linear_Fh = nn.Linear(head_dim, head_dim, bias=True)
+    self.linear_Fh = nn.Linear(n_heads * head_dim, head_dim, bias=True)
     torch.nn.init.normal_(self.linear_Fh.weight, mean=0.0, std=0.02)
     torch.nn.init.zeros_(self.linear_Fh.bias)
 
-    self.linear_Ih = nn.Linear(head_dim, head_dim, bias=True)
+    self.linear_Ih = nn.Linear(n_heads * head_dim, head_dim, bias=True)
     torch.nn.init.normal_(self.linear_Ih.weight, mean=0.0, std=0.02)
     torch.nn.init.zeros_(self.linear_Ih.bias)
 
-    self.linear_Zh = nn.Linear(head_dim, head_dim, bias=True)
+    self.linear_Zh = nn.Linear(n_heads * head_dim, head_dim, bias=True)
     torch.nn.init.normal_(self.linear_Zh.weight, mean=0.0, std=0.02)
     torch.nn.init.zeros_(self.linear_Zh.bias)
 
-    self.linear_Oh = nn.Linear(head_dim, head_dim, bias=True)
+    self.linear_Oh = nn.Linear(n_heads * head_dim, head_dim, bias=True)
     torch.nn.init.normal_(self.linear_Oh.weight, mean=0.0, std=0.02)
     torch.nn.init.zeros_(self.linear_Oh.bias)
 
@@ -129,6 +129,8 @@ class MultiHeadLSTMCell(nn.Module):
     # iterate over the sequence
     outputs = []
     for idx in range(self.seq_len):
+      check(h, (bsz, self.n_heads, self.head_dim))
+      h = h.view(bsz, self.n_heads * self.head_dim * 2)
       
       # gate contribution of the current state
       fh = self.linear_Fh(h)  # forget gate
@@ -364,8 +366,8 @@ class MLP(torch.nn.Module):
         torch.nn.init.zeros_(self.c_proj.bias)
     
     def forward(self, x, log=None):
-        bsz, _, _ = x.shape
-        seq_len = 512
+        bsz, seq_len, _ = x.shape
+        
         check(x, (bsz, seq_len, self.h_dim))
 
         x = self.c_fc(x)
@@ -385,21 +387,21 @@ class MLP(torch.nn.Module):
 
 
 class Block(nn.Module):
-  def __init__(self, seq_len, h_dim, mlp_dim, head_dim, n_heads, n_layers, is_quasi, block_length, name):
+  def __init__(self, seq_len, h_dim, mlp_dim, head_dim, n_heads, n_layers, non_quasi, block_length, name):
     super().__init__()
     self.name = name
     self.h_dim = h_dim
     self.seq_len = seq_len
-    self.is_quasi = is_quasi
+    self.non_quasi = non_quasi
 
     self.ln1 = LayerNorm(h_dim, name=f"{self.name}.ln1")
-    if self.is_quasi:
+    if self.non_quasi:
+      self.rnn = MultiHeadLSTMCell(seq_len=seq_len, h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
+                                  name=f"{self.name}.MultiHeadLSTM")
+    else:
       self.rnn = MultiHeadQuasiLSTMCell(seq_len=seq_len, h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
                                         block_length=block_length,
                                         name=f"{self.name}.MultiHeadQuasiLSTM")
-    else:
-      self.rnn = MultiHeadLSTMCell(seq_len=seq_len, h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
-                                  name=f"{self.name}.MultiHeadLSTM")
                                   
     self.ln2 = LayerNorm(h_dim, name=f"{self.name}.ln2")
     self.mlp = MLP(h_dim=h_dim, mlp_dim=mlp_dim, n_layers=n_layers, name=f"{self.name}.MLP")

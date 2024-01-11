@@ -22,7 +22,6 @@ CUDA_VISIBLE_DEVICES=0 torchrun --standalone languini/projects/lstm/main.py tiny
 ## Multi GPU:
 CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2 --master_addr=server.example.com --master_port=12300 \
     languini/projects/lstm/main.py tiny \
-    --is_quasi \
     --train_batch_size 16 \
     --eval_every 1000 \
     --log_grads_every 1000 \

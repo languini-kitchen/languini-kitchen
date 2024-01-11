@@ -34,7 +34,7 @@ DEFAULT_CONFIG = {
     "mlp_dim": None,
     "head_dim": None,
     "n_heads": None,
-    "is_quasi": None,
+    "non_quasi": None,
     "block_length": None,
 }
 
@@ -60,7 +60,7 @@ class Model(torch.nn.Module):
                                      head_dim=c.head_dim,
                                      n_heads=c.n_heads,
                                      n_layers=c.n_layers,
-                                     is_quasi=c.is_quasi,
+                                     non_quasi=c.non_quasi,
                                      block_length=c.block_length,
                                      name=f"{self.name}/Block{i+1}"))
         
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     c.block_length = 32
     c.seq_len = 512
     c.vocab_size = 666
-    c.is_quasi = True
+    c.non_quasi = False
     if torch.cuda.is_available():
         c.device = 'cuda'
         c.n_workers = torch.cuda.device_count()

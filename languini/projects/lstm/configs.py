@@ -29,8 +29,8 @@ def add_exp_name(config):
     """Constructs the name of the log folder used to easily identify the experiment. """
     c = config
     c.exp_name = ("{}LSTM{}_{}_bsz{}_micro{}_sl{}_coslr{}to{}_h{}_ff{}_nH{}_dH{}_nl{}_clip{}_decay{}k_workers{}{}_fp16_seed{}{}"
-                  .format("quasi" if c.is_quasi else "",
-                          f"_bl{c.block_length}" if c.is_quasi else "",
+                  .format("" if c.non_quasi else "quasi",
+                          "" if c.non_quasi else f"_bl{c.block_length}",
                           c.dataset.replace("_", ""),
                           c.train_batch_size,
                           c.gradient_accumulation_steps,
@@ -95,7 +95,7 @@ def load_config(name=None):
         name = 'mini'
 
     # model
-    c.is_quasi = False
+    c.non_quasi = False
     if name == 'mini':
         c.n_layers = 4
         c.h_dim = 512
