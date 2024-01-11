@@ -37,7 +37,7 @@ install_requires_core = [
 
 setup(
     name='languini',
-    version='0.0.1',    
+    version='0.0.2',    
     description='LM Research Environment',
     url='none',
     author='Imanol Schlag',

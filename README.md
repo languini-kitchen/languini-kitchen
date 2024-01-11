@@ -146,6 +146,15 @@ If you would like to share your work we recommend these additional steps.
 
 Successfully pushing your project to the official languini-kitchen repository will make it easier for others to see your work and build on it. New projects and results may be also mentioned on any of Languini's social media channels.  
 
+## Current Model Implementation
+These are the current models which are implemented within languini. You can find the commands to reproduce their respective results in the project's readme. 
+
+| Model | Project | Brief Description |
+| :--: | :--: | :--: |
+| [GPT](languini/projects/gpt/) | Initial Baselines | GPT-2 inspired transformer baseline | 
+| [LSTM](languini/projects/lstm/) | Initial Baselines | Classic LSTM |  
+| [Quasi-LSTM](languini/projects/lstm/) | Initial Baselines | Quasi LSTM with block-parallel implementation | 
+
 
 ## Frequently Asked Questions
 
@@ -164,3 +173,13 @@ The dataloader creates ```train_batch_size``` sequence streams. The books are lo
 ___Q: Why does the throughput print during training not match the published throughput results?___
 
 Throughput should be measured ***before*** the training begins with the `languini/common_lib/throughput.py` and `languini/common_lib/throughput_sweep.py` scripts. These scripts feed random indices to the model and measure the average time it takes to perform a forward pass, backward pass, and weight update. This allows the researcher to calculate the number of tokens they can process for specific levels of compute and also allows them to train the model on hardware that is different from the reference hardware. The throughput logs created during training can vary due to the hardware, the load of the entire system, or other potential bottlenecks like memory transfer, disk reading speed, or network speed (in the case of distributed training).
+
+## Changelog
+
+### v0.0.2
+
+Fix RNN state-carrying bug for RNN trained with gradient accumulation. 
+
+### v0.0.1
+
+Initial release.
