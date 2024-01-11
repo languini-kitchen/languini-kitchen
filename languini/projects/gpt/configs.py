@@ -46,6 +46,7 @@ def add_exp_name(config):
                           c.n_workers,
                           "" if c.compile == "None" else f"_{c.compile}Compile",
                           c.seed,
+                          f"_{c.comment}" if c.comment else "",
                           "_debug" if c.debug else "")                          
                  )
 
@@ -85,6 +86,7 @@ def load_config(name=None):
         log_ckpt_every = 5_000,             # save model checkpoint to disk
 
         # logging
+        comment = "",
         logger_type = 'all',  # can be 'tb', 'wandb' or 'all'
         wandb_project_name = 'gpt',
     )
