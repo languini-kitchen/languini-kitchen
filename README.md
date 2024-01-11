@@ -19,7 +19,9 @@ Enabling Language Modelling Research at Different Scales of Compute.
 [How to run experiments](README.md#how-to-run-experiments) <br>
 [How to evaluate models on the languini books benchmark](README.md#how-to-evaluate-models-on-the-languini-books-benchmark) <br>
 [Step by step instructions for research on languini](README.md#step-by-step-instructions-for-research-on-languini) <br>
-[Frequently Asked Questions](README.md#frequently-asked-questions)
+[Current Model Implementation](README.md#current-model-implementation) <br>
+[Frequently Asked Questions](README.md#frequently-asked-questions) <br>
+[Changelog](README.md#changelog)
 
 ## Introduction
 
