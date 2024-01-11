@@ -251,7 +251,9 @@ class LMTrainer:
         total_watch = train_utils.StopWatch()       # total step
         tokens_seen = 0                             # total number of tokens seen
         
-        curr_state = None
+        # we keep a separate model state for each micro step since gradient_accumulation_steps split the batch size
+        curr_states = [None] * c.gradient_accumulation_steps
+        
         total_watch.start()
         for step in range(c.max_train_steps):
             self.model.train()
@@ -273,6 +275,7 @@ class LMTrainer:
             load_watch.pause().count()
 
             for micro_step in range(c.gradient_accumulation_steps):
+                curr_state = curr_states[micro_step]
 
                 # trick taken from Karpathy's nanoGPT to not sync on every backward call
                 self.model.require_backward_grad_sync = (micro_step == c.gradient_accumulation_steps - 1)
@@ -315,20 +318,27 @@ class LMTrainer:
                     # keep a sum of the avg_loss of each micro batch
                     avg_loss = avg_loss + micro_avg_loss.detach()
                     
-                    # detach state, log, and check state size
+                    # detach the current state
                     curr_state = common_utils.traverse(curr_state, func=lambda x: None if x is None else x.detach())
+
+                    # log state stats
                     if do_grads_log:
                         curr_state_lst = common_utils.flatten(common_utils.traverse(curr_state, func=lambda x: None if x is None else x.cpu()))
                         for state_idx, state in enumerate(curr_state_lst):
                             if not state is None:
                                 debug_utils.log_stats_and_dist(state, f"state{state_idx}", log=(self.logger, step))
                     
+                    # check state size is constant
                     new_state_size = common_utils.get_total_tensor_size(curr_state)
                     if state_size != 0:
                         assert state_size == new_state_size, f"After forward call state size changed from {state_size} to {new_state_size}"
+                    
+                # write the state of this microstep into the list of states
+                curr_states[micro_step] = curr_state
 
                 # scale loss in case of lower precision and perform the backward pass
                 backward_watch.start()
+
                 # we need to divide the loss by the number of gradient acc. steps to get the average gradient before we step below
                 micro_avg_loss = micro_avg_loss / c.gradient_accumulation_steps
                 if self.scaler:
@@ -377,7 +387,7 @@ class LMTrainer:
             # Perfom a validation set evaluation (fixed number of batches)
             if c.eval_every > 0 and step % c.eval_every == 0 and step > 0:
                 eval_watch.start()
-                self.validation(curr_state=curr_state, step=step)
+                self.validation(curr_state=curr_states[0], step=step)
                 eval_watch.pause().count()
 
             # Write logs to disk
@@ -431,7 +441,7 @@ class LMTrainer:
             total_watch.count()
         
         # Final validation run and checkpoint
-        self.validation(curr_state=curr_state, step=step)
+        self.validation(curr_state=curr_states[0], step=step)
         if parallel_utils.is_main_process():
             self.save_checkpoint(self.logger, step)
 
