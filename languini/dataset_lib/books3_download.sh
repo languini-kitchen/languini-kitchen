@@ -23,8 +23,11 @@ fi
 
 # Download and extract the dataset
 echo "Downloading dataset..."
-#wget https://the-eye.eu/public/AI/pile_preliminary_components/books3.tar.gz -P "$destination"
-wget --continue https://thenose.cc/public/AI/EleutherAI_ThePile_v1/pile_preliminary_components/books3.tar.gz -P "$destination"
+# previous hosts
+# https://the-eye.eu/public/AI/pile_preliminary_components/books3.tar.gz
+# https://thenose.cc/public/AI/EleutherAI_ThePile_v1/pile_preliminary_components/books3.tar.gz
+wget --continue http://62.212.86.148/datasets/EleutherAI_ThePile_v1/pile_preliminary_components/books3.tar.gz -P "$destination"
+
 tar -xvzf "$destination/books3.tar.gz" -C "$destination"
 
 echo "Done."
