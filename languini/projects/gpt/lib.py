@@ -97,7 +97,11 @@ class CausalSelfAttention(nn.Module):
       dot = torch.einsum("bhid,bhjd->bhij", q, k) * self.dot_scale
       dot = dot.masked_fill(self.mask[:,:,:seqlen,:seqlen] == 0, float('-inf'))
       attn = F.softmax(dot, dim=-1)
-      new_v = torch.einsum("bhjd,bhij->bhid", v, attn)
+      # the line below breaks when using torch compile with different eval batch size
+      # furthermore, the line is significantly slower than the alternative
+      # new_v = torch.einsum("bhjd,bhij->bhid", v, attn)
+      # new_v = attn @ v  # also slower than below
+      new_v = torch.einsum("bhij,bhjd->bhid", attn, v)
     
     check(new_v, (bsz, self.n_heads, seqlen, self.head_dim))
     new_v = new_v.transpose(1,2).reshape(bsz, seqlen, self.n_heads * self.head_dim)

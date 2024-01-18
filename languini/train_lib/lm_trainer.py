@@ -98,7 +98,10 @@ def evaluation(config, model, state, data_source, max_steps, last_n=-1, print_pr
                 if print_progress and batch_count % 1_000 == 0:
                     parallel_utils.mprint(f"{batch_count:d}")
                 
-                assert batch_x.shape[0] == batch_y.shape[0] == 1, "evaluation only implemented for single worker"
+                assert batch_x.shape[0] == batch_y.shape[0] == 1, "evaluation requires microsteps-dim in batch to be 1"
+                check(batch_x, (1, local_bsz, -1))
+
+                # Remove the microbatch dimension
                 batch_x, batch_y = batch_x.squeeze(0), batch_y.squeeze(0)
                 bsz, seqlen = batch_x.shape
                 
