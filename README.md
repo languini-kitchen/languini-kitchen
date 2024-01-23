@@ -81,7 +81,7 @@ torchrun --standalone languini/projects/gpt/main.py tiny --h_dim 666
 
 If you have multiple GPUs available you need to specify the number of GPUs and master server. For example, use the following command to run on GPU with IDs 0 and 2. Training across different machines (nodes) is only recommended if your network is fast enough. 
 ```
-CUDA_VISIBLE_DEVICES=0,2 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2
+CUDA_VISIBLE_DEVICES=0,2 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2 \
     --master_addr=localhost --master_port=12303 languini/projects/gpt/main.py mini \
     --max_train_steps 50000 \
     --decay_steps 50000 \
