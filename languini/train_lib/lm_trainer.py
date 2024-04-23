@@ -126,7 +126,7 @@ def evaluation(config, model, state, data_source, max_steps, last_n=-1, print_pr
                 check(all_losses, (bsz * last_n,))
 
                 # mask losses that are padded (unlike training, evaluation can result in batches with padded batches)
-                is_padding = batch_x.reshape(-1) == 0 # (bsz * last_n,)
+                is_padding = batch_y.reshape(-1) == 0 # (bsz * last_n,)
                 all_losses = all_losses.masked_fill(is_padding, 0.0)
                 token_count = torch.sum(~is_padding)
 
@@ -176,10 +176,7 @@ def log_eval_stats(eval_data_source, eval_steps, last_n, sp, logger, device):
             str_length += len(str)
 
         # count non-padding tokens
-        if is_padded:
-            token_count += torch.sum(batch_x != 0)
-        else:
-            token_count += batch_x.numel()
+        token_count += torch.sum(batch_y != 0) if is_padded else batch_y.numel()
     
     # sum across accelerators
     dist.all_reduce(str_length, dist.ReduceOp.SUM)
