@@ -19,6 +19,8 @@ import shutil
 import pickle
 import zipfile
 import argparse
+import re
+import wandb
 from languini.train_lib import logger
 from languini.common_lib.parallel_utils import mprint
 from languini.common_lib.parallel_utils import is_main_process
@@ -87,12 +89,6 @@ def save_source_code(project_path, logger):
         save_zipfile(zip_file_path)
 
 
-def save_config(config):
-    config_file_path = os.path.join(config.log_path, "config.pickle")
-    with open(config_file_path, "wb") as f:
-       pickle.dump(config, f)
-
-
 def setup_experiment(config):
     config.log_path = os.path.join(config.project_path, config.relative_log_path, config.exp_name)
     
@@ -109,7 +105,7 @@ def setup_experiment(config):
     save_source_code(config.project_path, logger_obj)
 
     # save the used config in the log folder
-    save_config(config)
+    logger_obj.save_file(config, "config.pickle")
 
     return logger_obj
 
@@ -152,3 +148,52 @@ def update_config_given_args(config, args, verbose=True):
                 mprint(f"\toverwriting {key} to {value}")
             config[key] = value
     return config
+
+
+def load_wandb_files(run_path, exclude=None, include=None):
+    """
+    Downloads all files of a wandb run into a cache directory if not cached already
+
+    Args:
+        run_path: The wandb run path
+        exclude: A list of regex patterns to exclude from download (default is none)
+        include: A list of regex patterns to include in download (default is all)
+    
+    Returns:
+        The path to the directory with the run's files
+    """
+    api = wandb.Api()
+    run = api.run(run_path)
+    files = run.files()
+
+    run_dir = os.path.join(os.getcwd(), "cache", run_path.replace("/", "_"))
+    os.makedirs(run_dir, exist_ok=True)
+
+    for file in files:
+        if os.path.exists(os.path.join(run_dir, file.name)):
+            continue
+        # check if file.name matches any regex
+        if exclude is not None and any([re.match(pattern, file.name) for pattern in exclude]):
+            continue
+        if include is not None and not any([re.match(pattern, file.name) for pattern in include]):
+            continue
+        
+        print(f"Downloading file {file.name} from run {run_path}...")
+        file.download(root=run_dir, exist_ok=False)
+    
+    return run_dir 
+
+
+def load_wandb_checkpoint_and_config(run_path):
+    """
+    Load a checkpoint and config from a wandb run path.
+    """
+    wandb_dir = load_wandb_files(run_path, include=["config.pickle", ".*model.pt"])
+    checkpoint_file = os.path.join(wandb_dir, "checkpoints/model.pt")
+    config_file = os.path.join(wandb_dir, "config.pickle")
+    if not os.path.exists(checkpoint_file):
+        raise FileNotFoundError(f"Could not load checkpoitn file from wandb run {run_path}")
+    if not os.path.exists(config_file):
+        raise FileNotFoundError(f"Could not load config file from wandb run {run_path}")
+    return checkpoint_file, config_file
+
