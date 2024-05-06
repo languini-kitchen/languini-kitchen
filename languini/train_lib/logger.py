@@ -16,6 +16,7 @@ import os
 import PIL
 import torch
 import wandb
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -228,3 +229,41 @@ class Logger:
         
         if self.tb_writer is not None:
             self.tb_writer.add_text(log_key, log_text, step)
+
+
+    def save_file(self, obj, filename):
+        """
+        Save object to a file. If wandb is used, the file is saved to the wandb run dir.
+
+        Depending on the file extension, different methods are used.
+
+        Args:
+            obj: object to save
+            name: name of the file (with extension)
+        Returns:
+            path to the saved file
+        """
+        if not self.is_main:
+            return
+        
+        if self.use_wandb:
+            save_path = os.path.join(self.wandb_run_dir, filename)
+        else:
+            save_path = os.path.join(self.log_path, filename)
+        
+        # make directory if necessary
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        assert not os.path.exists(save_path), f"File {save_path} already exists"
+
+        if filename.endswith(".pt"):
+            torch.save(obj, save_path)
+        elif filename.endswith(".npy"):
+            if torch.is_tensor(obj):
+                obj = obj.cpu().numpy()
+            np.save(save_path, obj)
+        elif filename.endswith(".pickle"):
+            with open(save_path, "wb") as f:
+                pickle.dump(obj, f)
+        else:
+            raise ValueError(f"Unknown file extension: {filename}")
+        return save_path

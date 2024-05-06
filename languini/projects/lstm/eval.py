@@ -157,8 +157,14 @@ def main():
     parser.add_argument("--data_root", default=None, type=str, help="Path to the data in case it ought to differ from the path in the loaded config.") 
     parser.add_argument("--checkpoint_file", default="", type=str, help=f"Model checkpoint to load.")
     parser.add_argument("--config_file", default="", type=str, help=f"Model config to load.")
+    parser.add_argument("--wandb_run", default="", type=str, help=f"Wandb run to load model config and checkpoint from.")
     parser.add_argument("--eval_data_split", default="test", type=str, help=f"Name of the languini books split to do eval on.")
     args = parser.parse_args(sys.argv[1:])
+
+    # download file from wandb if necessary
+    if args.wandb_run:
+        assert not args.checkpoint_file and not args.config_file, "Cannot load both from wandb and local filesystem."
+        args.checkpoint_file, args.config_file = experiment_utils.load_wandb_checkpoint_and_config(args.wandb_run)
 
     # load config file
     with open(args.config_file, "rb") as f:
